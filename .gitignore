@@ -1,0 +1,15 @@
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+*.AppImage
+*.AppDir/
+*.pkg.tar.zst
+*.pkg.tar.zst.sig
+/pkg/
+.cache/
+.DS_Store
+Thumbs.db

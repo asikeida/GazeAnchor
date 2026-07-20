@@ -1,0 +1,36 @@
+# Maintainer: local
+pkgname=motion-stabilizer-linux
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Visual stabilization overlay for KDE Wayland'
+arch=('x86_64')
+url='https://github.com/shsr07/MotionStabilizer'
+license=('MIT')
+depends=(
+  'gcc-libs'
+  'glibc'
+  'kglobalaccel'
+  'layer-shell-qt'
+  'qt6-base'
+)
+makedepends=(
+  'cmake'
+  'pkgconf'
+)
+source=('MotionStabilizer-Linux::git+https://github.com/zjut-gwb/MotionStabilizer-Linux.git')
+sha256sums=('SKIP')
+
+build() {
+  cmake -S "$srcdir/MotionStabilizer-Linux" -B "$srcdir/build" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DENABLE_LAYER_SHELL_QT=ON \
+    -DENABLE_KGLOBALACCEL=ON \
+    -DENABLE_X11_FALLBACK=ON
+  cmake --build "$srcdir/build"
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+  install -Dm644 "$srcdir/MotionStabilizer-Linux/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
