@@ -5,8 +5,8 @@
 ## 1. 基础环境
 
 ```bash
-bash linux/scripts/check-env.sh
-/tmp/motion-stabilizer-linux-build/motion-stabilizer-linux --diagnose
+bash scripts/check-env.sh
+/tmp/gaze-anchor-build/gaze-anchor --diagnose
 ```
 
 期望：
@@ -20,7 +20,7 @@ bash linux/scripts/check-env.sh
 运行：
 
 ```bash
-/tmp/motion-stabilizer-linux-build/motion-stabilizer-linux
+/tmp/gaze-anchor-build/gaze-anchor
 ```
 
 检查：
@@ -92,7 +92,7 @@ Wayland/KDE 下独占全屏行为取决于 compositor 和游戏运行方式。
 建议分别测试：
 
 ```bash
-gamescope -W 1920 -H 1080 -- /tmp/motion-stabilizer-linux-build/motion-stabilizer-linux
+gamescope -W 1920 -H 1080 -- /tmp/gaze-anchor-build/gaze-anchor
 ```
 
 以及从 Steam 中使用 gamescope 包裹游戏。
@@ -109,8 +109,8 @@ gamescope -W 1920 -H 1080 -- /tmp/motion-stabilizer-linux-build/motion-stabilize
 
 ```bash
 echo $XDG_SESSION_TYPE
-/tmp/motion-stabilizer-linux-build/motion-stabilizer-linux --diagnose
-/tmp/motion-stabilizer-linux-build/motion-stabilizer-linux
+/tmp/gaze-anchor-build/gaze-anchor --diagnose
+/tmp/gaze-anchor-build/gaze-anchor
 ```
 
 检查：

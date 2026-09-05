@@ -1,0 +1,212 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  source-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build source tarball
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/build-source-tarball.sh
+
+      - name: Verify source release consistency
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/generate-release-notes.sh
+          bash packaging/collect-release-artifacts.sh
+          bash packaging/verify-release-consistency.sh "${GITHUB_REF_NAME#v}" source-only
+
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-source
+          path: |
+            dist/release/source/*.tar.gz
+            dist/release/RELEASE-NOTES.md
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+
+  deb-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            appstream \
+            cmake \
+            debhelper \
+            desktop-file-utils \
+            dpkg-dev \
+            libx11-dev \
+            libxfixes-dev \
+            pkg-config \
+            pkgconf \
+            qt6-base-dev
+
+      - name: Build and verify Debian package
+        run: |
+          bash packaging/build-deb-package.sh
+          bash packaging/verify-deb-package.sh
+
+      - name: Collect release artifacts
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/collect-release-artifacts.sh
+
+      - name: Verify Debian release consistency
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/verify-release-consistency.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Upload Debian release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-release-deb
+          path: |
+            dist/release/deb/*
+            dist/release/RELEASE-NOTES.md
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+
+  rpm-release:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf -y update
+          dnf -y install \
+            cmake \
+            gcc-c++ \
+            git \
+            libX11-devel \
+            libXfixes-devel \
+            pkgconf-pkg-config \
+            qt6-qtbase-devel \
+            rpm-build \
+            tar
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and verify RPM package
+        run: |
+          bash packaging/build-rpm-package.sh
+          bash packaging/verify-rpm-package.sh
+
+      - name: Collect release artifacts
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/collect-release-artifacts.sh
+
+      - name: Verify RPM release consistency
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/verify-release-consistency.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Upload RPM release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-release-rpm
+          path: |
+            dist/release/rpm/*
+            dist/release/RELEASE-NOTES.md
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+
+  appdir-release:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            appstream \
+            base-devel \
+            cmake \
+            desktop-file-utils \
+            git \
+            kglobalaccel \
+            layer-shell-qt \
+            pkgconf \
+            qt6-base
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build AppDir staging bundle
+        run: bash packaging/appimage-build.sh
+
+      - name: Collect release artifacts
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/build-source-tarball.sh
+          bash packaging/collect-release-artifacts.sh
+
+      - name: Verify AppDir release consistency
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF_NAME#v}"
+          bash packaging/verify-release-consistency.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Upload AppDir release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-release-appdir
+          path: |
+            dist/release/appimage/*
+            dist/release/source/*.tar.gz
+            dist/release/RELEASE-NOTES.md
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - source-release
+      - deb-release
+      - rpm-release
+      - appdir-release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/upload
+
+      - name: Merge release files
+        run: |
+          mkdir -p dist/final
+          find dist/upload -type f ! -name 'SHA256SUMS' ! -name 'RELEASE-NOTES.md' -exec cp -f {} dist/final/ \;
+          notes_file="$(find dist/upload -type f -name 'RELEASE-NOTES.md' -print -quit)"
+          test -n "$notes_file"
+          cp "$notes_file" dist/final/RELEASE-NOTES.md
+          (
+            cd dist/final
+            find . -maxdepth 1 -type f ! -name 'SHA256SUMS' -printf '%f\0' \
+              | sort -z \
+              | xargs -0 sha256sum > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/final/*
+          generate_release_notes: true

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Motion Stabilizer Linux
-Comment=Visual stabilization overlay for KDE Wayland
-Exec=motion-stabilizer-linux
-Icon=applications-graphics
-Terminal=false
-Categories=Utility;Accessibility;Game;
-StartupNotify=false

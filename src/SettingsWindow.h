@@ -2,6 +2,7 @@
 
 #include "AppConfig.h"
 
+#include <QCloseEvent>
 #include <QMainWindow>
 
 class QCheckBox;
@@ -16,6 +17,9 @@ public:
     explicit SettingsWindow(const AppConfig &config, QWidget *parent = nullptr);
 
     void setConfig(const AppConfig &config);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 signals:
     void configChanged(const AppConfig &config);

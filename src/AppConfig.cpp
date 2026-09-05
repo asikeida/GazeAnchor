@@ -1,14 +1,30 @@
 #include "AppConfig.h"
+#include "BuildInfo.h"
 
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QSaveFile>
 #include <QStandardPaths>
 
 namespace {
+
+constexpr int kCurrentSchemaVersion = 1;
+
+QString legacyConfigRoot()
+{
+    const QString base = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    return QDir(base).filePath(QStringLiteral("MotionStabilizer/motion-stabilizer-linux"));
+}
+
+QString currentConfigRoot()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+}
 
 QJsonObject colorToJson(const QColor &color)
 {
@@ -118,6 +134,7 @@ QJsonObject configToJson(const AppConfig &config)
     };
 
     return {
+        {QStringLiteral("schemaVersion"), kCurrentSchemaVersion},
         {QStringLiteral("ui"), ui},
         {QStringLiteral("overlay"), overlay},
         {QStringLiteral("crosshair"), crosshair},
@@ -168,16 +185,67 @@ bool saveConfigToPath(const QString &path, const AppConfig &config)
     const QFileInfo info(path);
     QDir().mkpath(info.absolutePath());
 
-    QFile file(path);
+    QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         return false;
     }
 
-    file.write(QJsonDocument(configToJson(config)).toJson(QJsonDocument::Indented));
-    return true;
+    if (file.write(QJsonDocument(configToJson(config)).toJson(QJsonDocument::Indented)) == -1) {
+        file.cancelWriting();
+        return false;
+    }
+
+    return file.commit();
 }
 
-bool loadConfigFromPath(const QString &path, AppConfig *config)
+bool backupInvalidFile(const QString &path)
+{
+    if (!QFileInfo::exists(path)) {
+        return false;
+    }
+
+    const QString suffix = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss"));
+    const QString backupPath = QStringLiteral("%1.corrupt-%2").arg(path, suffix);
+
+    QFile::remove(backupPath);
+    return QFile::rename(path, backupPath);
+}
+
+bool copyFileIfMissing(const QString &sourcePath, const QString &targetPath)
+{
+    if (!QFileInfo::exists(sourcePath) || QFileInfo::exists(targetPath)) {
+        return false;
+    }
+
+    QDir().mkpath(QFileInfo(targetPath).absolutePath());
+    return QFile::copy(sourcePath, targetPath);
+}
+
+void migrateLegacyConfigIfNeeded()
+{
+    const QString currentRoot = currentConfigRoot();
+    const QString legacyRoot = legacyConfigRoot();
+    if (currentRoot == legacyRoot || QFileInfo::exists(currentRoot)) {
+        return;
+    }
+
+    if (!QFileInfo::exists(legacyRoot)) {
+        return;
+    }
+
+    QDir().mkpath(currentRoot);
+    copyFileIfMissing(QDir(legacyRoot).filePath(QStringLiteral("config.json")),
+                      QDir(currentRoot).filePath(QStringLiteral("config.json")));
+
+    const QDir legacyProfiles(QDir(legacyRoot).filePath(QStringLiteral("profiles")));
+    const QString currentProfilesPath = QDir(currentRoot).filePath(QStringLiteral("profiles"));
+    QDir().mkpath(currentProfilesPath);
+    for (const QString &fileName : legacyProfiles.entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name)) {
+        copyFileIfMissing(legacyProfiles.filePath(fileName), QDir(currentProfilesPath).filePath(fileName));
+    }
+}
+
+bool loadConfigFromPath(const QString &path, AppConfig *config, bool backupOnFailure = false)
 {
     if (!config) {
         return false;
@@ -188,12 +256,20 @@ bool loadConfigFromPath(const QString &path, AppConfig *config)
         return false;
     }
 
-    const auto doc = QJsonDocument::fromJson(file.readAll());
+    QJsonParseError error;
+    const auto doc = QJsonDocument::fromJson(file.readAll(), &error);
     if (!doc.isObject()) {
+        if (backupOnFailure) {
+            backupInvalidFile(path);
+        }
         return false;
     }
 
-    *config = configFromJson(doc.object());
+    const QJsonObject root = doc.object();
+    const int schemaVersion = root.value(QStringLiteral("schemaVersion")).toInt(0);
+    Q_UNUSED(schemaVersion)
+
+    *config = configFromJson(root);
     return true;
 }
 
@@ -201,14 +277,15 @@ bool loadConfigFromPath(const QString &path, AppConfig *config)
 
 QString ConfigStore::configPath()
 {
-    const QString base = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    const QString base = currentConfigRoot();
     return QDir(base).filePath(QStringLiteral("config.json"));
 }
 
 AppConfig ConfigStore::load()
 {
+    migrateLegacyConfigIfNeeded();
     AppConfig config;
-    loadConfigFromPath(configPath(), &config);
+    loadConfigFromPath(configPath(), &config, true);
     return config;
 }
 
@@ -219,7 +296,8 @@ bool ConfigStore::save(const AppConfig &config)
 
 QString ConfigStore::profilesDir()
 {
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)).filePath(QStringLiteral("profiles"));
+    migrateLegacyConfigIfNeeded();
+    return QDir(currentConfigRoot()).filePath(QStringLiteral("profiles"));
 }
 
 QStringList ConfigStore::listProfiles()

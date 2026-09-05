@@ -1,5 +1,6 @@
 #include "SettingsWindow.h"
 
+#include <QApplication>
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QComboBox>
@@ -25,7 +26,7 @@ SettingsWindow::SettingsWindow(const AppConfig &config, QWidget *parent)
 
 void SettingsWindow::rebuildUi()
 {
-    setWindowTitle(text(QStringLiteral("Motion Stabilizer Linux"), QStringLiteral("Motion Stabilizer Linux")));
+    setWindowTitle(text(QStringLiteral("GazeAnchor"), QStringLiteral("GazeAnchor")));
     m_language = nullptr;
     m_overlayVisible = nullptr;
     m_overlayShape = nullptr;
@@ -76,6 +77,14 @@ void SettingsWindow::setConfig(const AppConfig &config)
 {
     m_config = config;
     syncUi();
+}
+
+void SettingsWindow::closeEvent(QCloseEvent *event)
+{
+    QMainWindow::closeEvent(event);
+    if (event->isAccepted()) {
+        QApplication::quit();
+    }
 }
 
 QWidget *SettingsWindow::buildOverlayPanel()

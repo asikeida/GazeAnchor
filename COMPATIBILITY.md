@@ -1,6 +1,6 @@
 # Linux Compatibility
 
-Motion Stabilizer Linux can be built on more Linux systems now, but feature availability depends on the display server and desktop environment.
+GazeAnchor can be built on more Linux systems now, but feature availability depends on the display server and desktop environment.
 
 ## Support Matrix
 
@@ -18,21 +18,23 @@ Motion Stabilizer Linux can be built on more Linux systems now, but feature avai
 Full KDE-oriented build:
 
 ```bash
-cmake -S linux -B /tmp/motion-stabilizer-linux-build \
+cmake -S . -B /tmp/gaze-anchor-build \
+  -DBUILD_PROFILE=FULL \
   -DENABLE_LAYER_SHELL_QT=ON \
   -DENABLE_KGLOBALACCEL=ON \
   -DENABLE_X11_FALLBACK=ON
-cmake --build /tmp/motion-stabilizer-linux-build -j
+cmake --build /tmp/gaze-anchor-build -j
 ```
 
 Minimal Qt-only build:
 
 ```bash
-cmake -S linux -B /tmp/motion-stabilizer-linux-minimal-build \
+cmake -S . -B /tmp/gaze-anchor-minimal-build \
+  -DBUILD_PROFILE=MINIMAL \
   -DENABLE_LAYER_SHELL_QT=OFF \
   -DENABLE_KGLOBALACCEL=OFF \
   -DENABLE_X11_FALLBACK=OFF
-cmake --build /tmp/motion-stabilizer-linux-minimal-build -j
+cmake --build /tmp/gaze-anchor-minimal-build -j
 ```
 
 The minimal build is useful for portability testing, but it does not provide reliable Wayland overlay stacking or global shortcuts.
@@ -42,7 +44,7 @@ The minimal build is useful for portability testing, but it does not provide rel
 Run:
 
 ```bash
-motion-stabilizer-linux --diagnose
+gaze-anchor --diagnose
 ```
 
 Check:
@@ -50,6 +52,7 @@ Check:
 - `Qt platform`
 - screen list and DPR
 - runtime files
+- build profile and git commit
 - compiled features:
   - `HAVE_LAYER_SHELL_QT`
   - `HAVE_KGLOBALACCEL`
@@ -58,6 +61,6 @@ Check:
 ## Practical Distribution Guidance
 
 - For Arch/KDE users, use the provided `PKGBUILD`.
-- For KDE Flatpak, use the provided KDE runtime manifest.
+- For KDE Flatpak, use `packaging/io.github.gazeanchor.GazeAnchor.yml` with the KDE runtime.
 - For generic Linux, AppImage needs linuxdeploy/linuxdeployqt work before it is a true portable binary.
 - For GNOME Wayland and wlroots compositors, a separate backend or portal-based shortcut implementation is required for good support.

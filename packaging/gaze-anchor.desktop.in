@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=@APP_DISPLAY_NAME@
+Comment=Visual stabilization overlay for Linux desktop sessions
+Exec=@APP_BINARY_NAME@
+Icon=@APP_ID@
+Terminal=false
+Categories=Game;
+StartupNotify=false

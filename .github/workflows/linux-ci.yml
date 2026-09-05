@@ -1,0 +1,159 @@
+name: linux-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ubuntu-minimal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            appstream \
+            cmake \
+            debhelper \
+            desktop-file-utils \
+            dpkg-dev \
+            libx11-dev \
+            libxfixes-dev \
+            pkg-config \
+            pkgconf \
+            qt6-base-dev
+
+      - name: Configure
+        run: cmake -S . -B build -DBUILD_PROFILE=MINIMAL -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Install smoke test
+        run: |
+          cmake --install build --prefix "$RUNNER_TEMP/gazeanchor-install"
+          "$RUNNER_TEMP/gazeanchor-install/bin/gaze-anchor" --version
+
+      - name: Validate desktop metadata
+        run: |
+          desktop-file-validate build/generated/io.github.gazeanchor.GazeAnchor.desktop
+          appstreamcli validate build/generated/io.github.gazeanchor.GazeAnchor.metainfo.xml
+
+      - name: Build Debian package
+        run: bash packaging/build-deb-package.sh
+
+      - name: Verify Debian package contents
+        run: bash packaging/verify-deb-package.sh
+
+      - name: Upload Debian artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-deb
+          path: |
+            ../gaze-anchor_*.deb
+            ../gaze-anchor_*.changes
+            ../gaze-anchor_*.buildinfo
+          if-no-files-found: error
+
+  fedora-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf -y update
+          dnf -y install \
+            appstream \
+            cmake \
+            desktop-file-utils \
+            gcc-c++ \
+            git \
+            libX11-devel \
+            libXfixes-devel \
+            pkgconf-pkg-config \
+            qt6-qtbase-devel \
+            rpm-build \
+            tar
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build RPM package
+        run: bash packaging/build-rpm-package.sh
+
+      - name: Verify RPM package contents
+        run: bash packaging/verify-rpm-package.sh
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaze-anchor-rpm
+          path: |
+            /tmp/opencode/gaze-anchor-rpmbuild/RPMS/**/*.rpm
+            /tmp/opencode/gaze-anchor-rpmbuild/SRPMS/**/*.src.rpm
+          if-no-files-found: error
+
+  arch-full:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            appstream \
+            base-devel \
+            cmake \
+            desktop-file-utils \
+            git \
+            kglobalaccel \
+            layer-shell-qt \
+            pkgconf \
+            qt6-base
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DBUILD_PROFILE=FULL -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Install smoke test
+        run: |
+          cmake --install build --prefix /tmp/gazeanchor-install
+          /tmp/gazeanchor-install/bin/gaze-anchor --version
+
+      - name: AppImage staging smoke test
+        run: |
+          bash packaging/appimage-build.sh
+          /tmp/GazeAnchor.AppDir/AppRun --version
+          test -x /tmp/GazeAnchor.AppDir/AppRun
+          test -x /tmp/GazeAnchor.AppDir/usr/bin/gaze-anchor
+          test -f /tmp/GazeAnchor.AppDir/usr/share/applications/io.github.gazeanchor.GazeAnchor.desktop
+          test -f /tmp/GazeAnchor.AppDir/usr/share/metainfo/io.github.gazeanchor.GazeAnchor.metainfo.xml
+          test -f /tmp/GazeAnchor.AppDir/usr/share/icons/hicolor/scalable/apps/io.github.gazeanchor.GazeAnchor.svg
+          test -f /tmp/GazeAnchor.AppDir/ldd.txt
+
+      - name: Validate desktop metadata
+        run: |
+          desktop-file-validate build/generated/io.github.gazeanchor.GazeAnchor.desktop
+          appstreamcli validate build/generated/io.github.gazeanchor.GazeAnchor.metainfo.xml
+
+      - name: Validate AUR metadata
+        run: |
+          cd packaging
+          makepkg --printsrcinfo >/tmp/gaze-anchor.SRCINFO
+          test -s /tmp/gaze-anchor.SRCINFO

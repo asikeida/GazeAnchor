@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>@APP_ID@</id>
+  <name>@APP_DISPLAY_NAME@</name>
+  <summary>Visual stabilization overlay for Linux desktop sessions</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="@APP_DEVELOPER_ID@">
+    <name>@APP_DISPLAY_NAME@ contributors</name>
+  </developer>
+  <launchable type="desktop-id">@APP_ID@.desktop</launchable>
+  <url type="homepage">https://github.com/zjut-gwb/MotionStabilizer-Linux</url>
+  <description>
+    <p>
+      GazeAnchor provides non-invasive visual anchors such as edge overlays,
+      a center crosshair, and a floating clock to reduce motion sickness in 3D games.
+    </p>
+    <p>
+      Feature availability depends on the current Linux desktop session. KDE Plasma Wayland
+      and X11 are the primary targets, while other Wayland compositors may run in a degraded mode.
+    </p>
+  </description>
+  <categories>
+    <category>Utility</category>
+    <category>Accessibility</category>
+    <category>Game</category>
+  </categories>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.1.0" date="2026-09-04" />
+  </releases>
+</component>

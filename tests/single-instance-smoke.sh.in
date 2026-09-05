@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+binary="@CMAKE_BINARY_DIR@/@APP_BINARY_NAME@"
+log_file="@CMAKE_BINARY_DIR@/single-instance-smoke.log"
+config_root="@CMAKE_BINARY_DIR@/single-instance-smoke-config"
+
+rm -f "$log_file"
+rm -rf "$config_root"
+mkdir -p "$config_root"
+
+export QT_QPA_PLATFORM=offscreen
+export XDG_CONFIG_HOME="$config_root"
+export GAZEANCHOR_IPC_SUFFIX="$(basename "@CMAKE_BINARY_DIR@")"
+
+"$binary" >"$log_file" 2>&1 &
+pid=$!
+
+cleanup() {
+  if kill -0 "$pid" >/dev/null 2>&1; then
+    "$binary" action quit >/dev/null 2>&1 || true
+    wait "$pid" || true
+  fi
+}
+trap cleanup EXIT
+
+for _ in $(seq 1 50); do
+  if "$binary" action show-settings >/dev/null 2>&1; then
+    "$binary" action toggle-overlay >/dev/null 2>&1
+    "$binary" action quit >/dev/null 2>&1
+    wait "$pid"
+    trap - EXIT
+    exit 0
+  fi
+  sleep 0.1
+done
+
+echo "single-instance smoke test failed" >&2
+cat "$log_file" >&2 || true
+exit 1

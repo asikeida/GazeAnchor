@@ -1,23 +1,21 @@
-app-id: io.github.motionstabilizer.MotionStabilizer
+app-id: io.github.gazeanchor.GazeAnchor
 runtime: org.kde.Platform
 runtime-version: '6.7'
 sdk: org.kde.Sdk
-command: motion-stabilizer-linux
+command: gaze-anchor
 finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --share=ipc
   - --device=dri
   - --talk-name=org.kde.kglobalaccel
-  - --filesystem=xdg-config/MotionStabilizer:create
+  - --filesystem=xdg-config/GazeAnchor:create
 modules:
-  - name: motion-stabilizer-linux
+  - name: gaze-anchor
     buildsystem: cmake-ninja
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
-      - -DENABLE_LAYER_SHELL_QT=ON
-      - -DENABLE_KGLOBALACCEL=ON
-      - -DENABLE_X11_FALLBACK=ON
+      - -DBUILD_PROFILE=FULL
     sources:
       - type: dir
         path: ..
