@@ -7,6 +7,7 @@ Build-Depends:
  debhelper-compat (= 13),
  cmake,
  libx11-dev,
+ libxext-dev,
  libxfixes-dev,
  pkgconf,
  qt6-base-dev

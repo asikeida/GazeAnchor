@@ -13,6 +13,7 @@ BuildRequires:  pkgconf-pkg-config
 BuildRequires:  pkgconfig(Qt6Widgets)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(xfixes)
+BuildRequires:  pkgconfig(xext)
 
 Requires:       qt6-qtbase
 

@@ -16,11 +16,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             appstream \
+            build-essential \
             cmake \
             debhelper \
             desktop-file-utils \
             dpkg-dev \
             libx11-dev \
+            libxext-dev \
             libxfixes-dev \
             pkg-config \
             pkgconf \
@@ -76,6 +78,7 @@ jobs:
             gcc-c++ \
             git \
             libX11-devel \
+            libXext-devel \
             libXfixes-devel \
             pkgconf-pkg-config \
             qt6-qtbase-devel \
@@ -116,6 +119,7 @@ jobs:
             git \
             kglobalaccel \
             layer-shell-qt \
+            libxext \
             pkgconf \
             qt6-base
 
