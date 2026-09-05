@@ -53,14 +53,16 @@ jobs:
       - name: Verify Debian package contents
         run: bash packaging/verify-deb-package.sh
 
+      - name: Stage Debian artifacts into workspace
+        run: |
+          mkdir -p dist/ci-deb
+          cp -f ../gaze-anchor_*.deb ../gaze-anchor_*.changes ../gaze-anchor_*.buildinfo dist/ci-deb/
+
       - name: Upload Debian artifacts
         uses: actions/upload-artifact@v4
         with:
           name: gaze-anchor-deb
-          path: |
-            ../gaze-anchor_*.deb
-            ../gaze-anchor_*.changes
-            ../gaze-anchor_*.buildinfo
+          path: dist/ci-deb/*
           if-no-files-found: error
 
   fedora-rpm:
@@ -160,5 +162,7 @@ jobs:
       - name: Validate AUR metadata
         run: |
           cd packaging
-          makepkg --printsrcinfo >/tmp/gaze-anchor.SRCINFO
+          useradd -m -G wheel builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- makepkg --printsrcinfo >/tmp/gaze-anchor.SRCINFO
           test -s /tmp/gaze-anchor.SRCINFO
