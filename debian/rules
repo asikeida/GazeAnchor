@@ -10,3 +10,6 @@ override_dh_auto_configure:
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DBUILD_PROFILE=X11 \
 		-DBUILD_TESTING=ON
+
+override_dh_auto_install:
+	dh_auto_install --destdir=$(CURDIR)/debian/tmp

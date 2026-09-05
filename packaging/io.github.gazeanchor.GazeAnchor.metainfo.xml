@@ -9,7 +9,7 @@
     <name>@APP_DISPLAY_NAME@ contributors</name>
   </developer>
   <launchable type="desktop-id">@APP_ID@.desktop</launchable>
-  <url type="homepage">https://github.com/zjut-gwb/MotionStabilizer-Linux</url>
+  <url type="homepage">https://github.com/asikeida/GazeAnchor</url>
   <description>
     <p>
       GazeAnchor provides non-invasive visual anchors such as edge overlays,

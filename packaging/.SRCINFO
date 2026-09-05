@@ -2,7 +2,7 @@ pkgbase = gaze-anchor-git
 	pkgdesc = Visual stabilization overlay for Linux desktop sessions
 	pkgver = r1.d4cb2555e8f6
 	pkgrel = 1
-	url = https://github.com/zjut-gwb/MotionStabilizer-Linux
+	url = https://github.com/asikeida/GazeAnchor
 	arch = x86_64
 	license = MIT
 	makedepends = cmake
@@ -17,7 +17,7 @@ pkgbase = gaze-anchor-git
 	depends = qt6-base
 	provides = gaze-anchor
 	conflicts = gaze-anchor
-	source = GazeAnchor::git+https://github.com/zjut-gwb/MotionStabilizer-Linux.git
+	source = GazeAnchor::git+https://github.com/asikeida/GazeAnchor.git
 	sha256sums = SKIP
 
 pkgname = gaze-anchor-git

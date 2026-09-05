@@ -4,7 +4,7 @@ pkgver=r1.d4cb2555e8f6
 pkgrel=1
 pkgdesc='Visual stabilization overlay for Linux desktop sessions'
 arch=('x86_64')
-url='https://github.com/zjut-gwb/MotionStabilizer-Linux'
+url='https://github.com/asikeida/GazeAnchor'
 license=('MIT')
 provides=('gaze-anchor')
 conflicts=('gaze-anchor')
@@ -22,7 +22,7 @@ makedepends=(
   'git'
   'pkgconf'
 )
-source=('GazeAnchor::git+https://github.com/zjut-gwb/MotionStabilizer-Linux.git')
+source=('GazeAnchor::git+https://github.com/asikeida/GazeAnchor.git')
 sha256sums=('SKIP')
 
 pkgver() {

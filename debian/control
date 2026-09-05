@@ -12,7 +12,7 @@ Build-Depends:
  pkgconf,
  qt6-base-dev
 Standards-Version: 4.7.0
-Homepage: https://github.com/zjut-gwb/MotionStabilizer-Linux
+Homepage: https://github.com/asikeida/GazeAnchor
 
 Package: gaze-anchor
 Architecture: any

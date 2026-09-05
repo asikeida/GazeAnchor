@@ -150,6 +150,7 @@ jobs:
             kglobalaccel \
             layer-shell-qt \
             libxext \
+            libxfixes \
             pkgconf \
             qt6-base
 

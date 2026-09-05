@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Visual stabilization overlay for Linux desktop sessions
 
 License:        MIT
-URL:            https://github.com/zjut-gwb/MotionStabilizer-Linux
+URL:            https://github.com/asikeida/GazeAnchor
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  cmake
